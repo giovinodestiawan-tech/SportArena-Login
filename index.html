@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Penyewaan Lapangan & F&B</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- HALAMAN LOGIN -->
+    <div id="loginPage" class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <i class="fa-solid fa-futbol"></i>
+                <h2>SportArena Login</h2>
+                <p>Silakan masuk untuk melanjutkan</p>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <label><i class="fa-solid fa-user"></i> Username</label>
+                    <input type="text" id="username" placeholder="Masukkan username (gio)" required>
+                </div>
+                <div class="input-group">
+                    <label><i class="fa-solid fa-lock"></i> Password</label>
+                    <input type="password" id="password" placeholder="Masukkan password (12345)" required>
+                </div>
+                <div id="loginError" class="error-msg"></div>
+                <button type="submit" class="btn-primary">Masuk <i class="fa-solid fa-arrow-right"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DASHBOARD / MENU UTAMA -->
+    <div id="dashboardPage" class="dashboard-container hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-futbol"></i>
+                <span>SportArena</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" onclick="switchTab('sewa')"><i class="fa-solid fa-calendar-days"></i> Sewa Lapangan & Alat</li>
+                <li onclick="switchTab('fnb')"><i class="fa-solid fa-burger"></i> Menu F&B</li>
+                <li onclick="switchTab('checkout')"><i class="fa-solid fa-cash-register"></i> Pembayaran & Struk</li>
+                <li onclick="switchTab('riwayat')"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat Pemesanan</li>
+            </ul>
+            <div class="sidebar-footer">
+                <button onclick="handleLogout()" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h3>Dashboard Pemesanan</h3>
+                <div class="user-profile">
+                    <i class="fa-solid fa-circle-user"></i>
+                    <span id="userDisplayName">Gio</span>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- TAB 1: SEWA LAPANGAN -->
+                <section id="tabSewa" class="tab-section">
+                    <div class="card">
+                        <h4><i class="fa-solid fa-receipt"></i> [1] Form Penyewaan Lapangan & Alat</h4>
+                        <form id="sewaForm" onsubmit="saveSewaData(event)">
+                            <div class="form-grid">
+                                <div class="input-group">
+                                    <label>Jenis Lapangan</label>
+                                    <select id="jenisLapangan" required onchange="hitungTotalSewa()">
+                                        <option value="" disabled selected>Pilih Lapangan</option>
+                                        <option value="Padel" data-harga="150000">Lapangan Padel (Rp 150.000 / jam)</option>
+                                        <option value="Mini Soccer" data-harga="250000">Lapangan Mini Soccer (Rp 250.000 / jam)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Sewa Raket (Opsional - Rp 35.000 / unit)</label>
+                                    <input type="number" id="sewaRaket" min="0" value="0" oninput="hitungTotalSewa()">
+                                </div>
+                                <div class="input-group">
+                                    <label>Tanggal Main</label>
+                                    <input type="date" id="tanggalMain" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Jam Mulai Sesi</label>
+                                    <input type="time" id="jamMain" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Durasi (Jam)</label>
+                                    <input type="number" id="durasiJam" min="1" value="1" required oninput="hitungTotalSewa()">
+                                </div>
+                            </div>
+                            <div class="subtotal-box">
+                                <span>Estimasi Biaya Lapangan & Alat:</span>
+                                <strong id="displaySubtotalSewa">Rp 0</strong>
+                            </div>
+                            <button type="submit" class="btn-primary mt-3">Simpan & Lanjut ke F&B <i class="fa-solid fa-arrow-right"></i></button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- TAB 2: F&B -->
+                <section id="tabFnb" class="tab-section hidden">
+                    <div class="card">
+                        <h4><i class="fa-solid fa-burger"></i> [2] Katalog Makanan & Minuman Pendamping</h4>
+                        <div class="fnb-grid" id="fnbKatalog">
+                            <!-- Render via JS -->
+                        </div>
+                        <button onclick="switchTab('checkout')" class="btn-primary mt-3">Lanjut ke Pembayaran <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </section>
+
+                <!-- TAB 3: CHECKOUT & STRUK -->
+                <section id="tabCheckout" class="tab-section hidden">
+                    <div class="card">
+                        <h4><i class="fa-solid fa-credit-card"></i> [3] Pembayaran & Checkout</h4>
+                        <div class="summary-details">
+                            <p><strong>Total Lapangan & Alat:</strong> <span id="sumSewa">Rp 0</span></p>
+                            <p><strong>Total Makanan & Minuman:</strong> <span id="sumFnb">Rp 0</span></p>
+                            <hr>
+                            <p class="total-grand"><strong>Total Keseluruhan:</strong> <span id="sumGrandTotal">Rp 0</span></p>
+                        </div>
+
+                        <div class="input-group mt-3">
+                            <label>Pilih Metode Pembayaran</label>
+                            <select id="metodeBayar">
+                                <option value="Transfer Bank">Transfer Bank</option>
+                                <option value="QRIS">QRIS</option>
+                                <option value="Tunai">Tunai di Tempat</option>
+                            </select>
+                        </div>
+                        <button onclick="prosesPembayaran()" class="btn-success mt-3"><i class="fa-solid fa-check-circle"></i> Bayar & Konfirmasi</button>
+
+                        <!-- Area Struk -->
+                        <div id="strukArea" class="struk-box hidden mt-4">
+                            <div class="struk-header">
+                                <h5>STRUK BUKTI SEWA & PESANAN</h5>
+                                <p id="strukId">ID Transaksi: -</p>
+                            </div>
+                            <div class="struk-body" id="strukContent">
+                                <!-- Isi Struk -->
+                            </div>
+                            <div class="struk-footer">
+                                <span class="badge-lunas">STATUS: LUNAS</span>
+                                <button onclick="window.print()" class="btn-secondary mt-2"><i class="fa-solid fa-print"></i> Cetak / Download Struk</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 4: RIWAYAT -->
+                <section id="tabRiwayat" class="tab-section hidden">
+                    <div class="card">
+                        <div class="flex-header">
+                            <h4><i class="fa-solid fa-table"></i> [4] Riwayat Pemesanan Lapangan</h4>
+                            <button onclick="exportToExcel()" class="btn-excel"><i class="fa-solid fa-file-excel"></i> Export ke Excel (.xlsx)</button>
+                        </div>
+                        <div class="table-responsive mt-3">
+                            <table class="data-table" id="tabelRiwayat">
+                                <thead>
+                                    <tr>
+                                        <th>ID Transaksi</th>
+                                        <th>Nama</th>
+                                        <th>Detail Lapangan</th>
+                                        <th>Alat & F&B</th>
+                                        <th>Total Biaya</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="6" class="text-center">Belum ada riwayat transaksi.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- SheetJS untuk Export Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
